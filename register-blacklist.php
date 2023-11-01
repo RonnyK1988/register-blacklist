@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Registration Blacklist
+Plugin Name: Register Blacklist
 Description: Prevents registration with specified email domains and email addresses.
 Version: 1.16
 Author: Ronny Kreuzberg
@@ -12,7 +12,7 @@ function reg_black_activate() {
 
     $table_name_domains = $wpdb->prefix . 'reg_black_domains';
     $table_name_emails = $wpdb->prefix . 'reg_black_emails';
-    $table_name_attempts = $wpdb->prefix . 'reg_black_attempts'; // New table
+    $table_name_attempts = $wpdb->prefix . 'reg_black_attempts';
     $table_name_options = $wpdb->prefix . 'reg_black_options';
 
     $charset_collate = $wpdb->get_charset_collate();
@@ -51,21 +51,32 @@ function reg_black_activate() {
     dbDelta($sql_options);
 
     // An array of domains to add to the domain table upon activation
+
     $initial_domains = array(
         '1secmail.com',
         '1secmail.org',
         'captchas.biz',
+        'circlebpo.com',
+        'decaptcha.biz',
+        'gemination.hair',
+        'gemination.hair',
+        'getadsnow.org',
+        'hotpublisher.org',
+        'mailbab.com',
         'mailkv.com',
         'maillsk.com',
         'maillv.com',
         'oonmail.com',
+        'voiceoftruth.info',
         'znemail.com'
     );
 
     // Get the existing domains from the database
+
     $existing_domains = $wpdb->get_col("SELECT domain FROM $table_name_domains");
 
     // Add the domains if they don't already exist
+
     foreach ($initial_domains as $domain) {
         if (!in_array($domain, $existing_domains)) {
             $wpdb->insert($table_name_domains, array('domain' => $domain));
@@ -77,6 +88,7 @@ register_activation_hook(__FILE__, 'reg_black_activate');
 
 
 // Function to block registration with specified email domains
+
 function reg_black_registration_check($errors, $sanitized_user_login, $user_email) {
     global $wpdb;
 
@@ -89,6 +101,7 @@ function reg_black_registration_check($errors, $sanitized_user_login, $user_emai
         $errors->add('email_blocked', __('Registration with this email or domain is not allowed.'));
 
         // Update statistics for blocked attempts
+
         $wpdb->query($wpdb->prepare(
             "INSERT INTO {$wpdb->prefix}reg_black_attempts (domain, email, blocked_attempts_count, last_login_attempt)
             VALUES (%s, %s, 1, NOW())
@@ -103,6 +116,7 @@ function reg_black_registration_check($errors, $sanitized_user_login, $user_emai
 add_filter('registration_errors', 'reg_black_registration_check', 10, 3);
 
 // Function to get the last login attempt with a domain
+
 function get_last_login_attempt($domain) {
     global $wpdb;
     $table_name_attempts = $wpdb->prefix . 'reg_black_attempts';
@@ -114,6 +128,7 @@ function get_last_login_attempt($domain) {
 }
 
 // Add settings link to the plugin page
+
 function reg_black_settings_link($links) {
     $settings_link = '<a href="options-general.php?page=reg-black-settings">Settings</a>';
     array_unshift($links, $settings_link);
@@ -124,6 +139,7 @@ $plugin_basename = plugin_basename(__FILE__);
 add_filter("plugin_action_links_$plugin_basename", 'reg_black_settings_link');
 
 // Create settings pages
+
 function reg_black_settings_page() {
     if (!current_user_can('manage_options')) {
         return;
@@ -156,6 +172,7 @@ function reg_black_settings_page() {
         $delete_db_tables = isset($_POST['reg_black_delete_db_tables']) ? 1 : 0;
 
         // Update the option for deleting tables on plugin deactivation
+
         update_option('reg_black_delete_db_tables', $delete_db_tables);
     }
 
@@ -256,10 +273,13 @@ function reg_black_settings_page() {
     </div>
     <script defer>
         document.addEventListener('DOMContentLoaded', function () {
+
             // Set the "Domains" tab as active initially
+
             document.querySelector('.nav-tab[href="#tab-domains"]').classList.add('nav-tab-active');
 
             // Add click event listeners to toggle tab visibility
+
             const tabs = document.querySelectorAll('.nav-tab');
             tabs.forEach(tab => {
                 tab.addEventListener('click', (event) => {
@@ -295,6 +315,7 @@ function reg_black_register_settings_page() {
 add_action('admin_menu', 'reg_black_register_settings_page');
 
 // Register uninstall hook to delete database tables on plugin deletion if the checkbox is checked
+
 function reg_black_uninstall() {
     global $wpdb;
     $delete_db_tables = get_option('reg_black_delete_db_tables', 0);
