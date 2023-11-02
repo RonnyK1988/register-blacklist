@@ -278,7 +278,7 @@ function reg_black_settings_page() {
         <div id="tab-settings">
 			<h3>Plugin Settings</h3>
 			<form method="post" action="">
-				<label for="reg_black_delete_db_tables">Delete DB Tables on Plugin Deactivation:</label>
+				<label for="reg_black_delete_db_tables">Delete all files and DB Tables on Plugin Deactivation:</label>
 				<input type="checkbox" id="reg_black_delete_db_tables" name="reg_black_delete_db_tables" <?php echo $delete_db_tables ? 'checked="checked"' : ''; ?>>
 				<input type="submit" class="button-primary" name="reg_black_settings_submit" value="Save Settings">
 			</form>
@@ -421,14 +421,21 @@ function reg_black_uninstall() {
     $delete_db_tables = get_option('reg_black_delete_db_tables', 0);
 
     if ($delete_db_tables) {
-        // Delete all three database tables when the plugin is deleted
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}reg_black_domains");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}reg_black_emails");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}reg_black_attempts");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}reg_black_options");
     }
-}
 
+    
+    $plugin_file = plugin_dir_path(__FILE__) . 'your-plugin-main-file.php';
+
+    if (file_exists($plugin_file)) {
+
+        unlink($plugin_file);
+    }
+}
+    
 register_uninstall_hook(__FILE__, 'reg_black_uninstall');
 
 // CSS Styles
