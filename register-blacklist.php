@@ -17,19 +17,19 @@ function reg_black_activate() {
 
     $charset_collate = $wpdb->get_charset_collate();
 
-    $sql_domains = "CREATE TABLE $table_name_domains (
+    $sql_domains = "CREATE TABLE IF NOT EXISTS $table_name_domains (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         domain varchar(255) NOT NULL,
         PRIMARY KEY  (id)
     ) $charset_collate;";
 
-    $sql_emails = "CREATE TABLE $table_name_emails (
+    $sql_emails = "CREATE TABLE IF NOT EXISTS $table_name_emails (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         email varchar(255) NOT NULL,
         PRIMARY KEY  (id)
     ) $charset_collate;";
 
-    $sql_attempts = "CREATE TABLE $table_name_attempts (
+    $sql_attempts = "CREATE TABLE IF NOT EXISTS $table_name_attempts (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         domain varchar(255) NOT NULL,
         email varchar(255) NOT NULL,
@@ -38,7 +38,7 @@ function reg_black_activate() {
         PRIMARY KEY  (id)
     ) $charset_collate;";
 
-    $sql_options = "CREATE TABLE $table_name_options (
+    $sql_options = "CREATE TABLE IF NOT EXISTS $table_name_options (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         delete_on_deactivation tinyint(1) NOT NULL DEFAULT 0,
         PRIMARY KEY  (id)
