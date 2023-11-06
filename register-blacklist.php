@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Registration Blacklist
+Plugin Name: Register Blacklist
 Description: Prevents registration with specified email domains and email addresses.
 Version: 1.16
 Author: Ronny Kreuzberg
@@ -12,7 +12,7 @@ function reg_black_activate() {
 
     $table_name_domains = $wpdb->prefix . 'reg_black_domains';
     $table_name_emails = $wpdb->prefix . 'reg_black_emails';
-    $table_name_attempts = $wpdb->prefix . 'reg_black_attempts'; // New table
+    $table_name_attempts = $wpdb->prefix . 'reg_black_attempts';
     $table_name_options = $wpdb->prefix . 'reg_black_options';
 
     $charset_collate = $wpdb->get_charset_collate();
@@ -51,21 +51,32 @@ function reg_black_activate() {
     dbDelta($sql_options);
 
     // An array of domains to add to the domain table upon activation
+
     $initial_domains = array(
         '1secmail.com',
         '1secmail.org',
         'captchas.biz',
+        'circlebpo.com',
+        'decaptcha.biz',
+        'gemination.hair',
+        'gemination.hair',
+        'getadsnow.org',
+        'hotpublisher.org',
+        'mailbab.com',
         'mailkv.com',
         'maillsk.com',
         'maillv.com',
         'oonmail.com',
+        'voiceoftruth.info',
         'znemail.com'
     );
 
     // Get the existing domains from the database
+
     $existing_domains = $wpdb->get_col("SELECT domain FROM $table_name_domains");
 
     // Add the domains if they don't already exist
+    
     foreach ($initial_domains as $domain) {
         if (!in_array($domain, $existing_domains)) {
             $wpdb->insert($table_name_domains, array('domain' => $domain));
