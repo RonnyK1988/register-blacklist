@@ -53,6 +53,7 @@ function reg_black_activate() {
     dbDelta($sql_options);
 
     // An array of domains to add to the domain table upon activation
+
     $initial_domains = array(
         '1secmail.com',
         '1secmail.org',
@@ -73,9 +74,11 @@ function reg_black_activate() {
     );
 
     // Get the existing domains from the database
+
     $existing_domains = $wpdb->get_col("SELECT domain FROM $table_name_domains");
 
     // Add the domains if they don't already exist
+    
     foreach ($initial_domains as $domain) {
         if (!in_array($domain, $existing_domains)) {
             $wpdb->insert($table_name_domains, array('domain' => $domain));
