@@ -2,10 +2,12 @@
 /*
 Plugin Name: Register Blacklist
 Description: Prevents registration with specified email domains and email addresses.
-Version: 1.18
+Version: 1.19
 Author: Ronny Kreuzberg
 License: GPL v2 or later
 */
+
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 function reg_black_activate() {
     global $wpdb;
