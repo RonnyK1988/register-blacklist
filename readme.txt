@@ -1,13 +1,12 @@
 === Register Blacklist ===
 Contributors: ronnyk1988
-Tags: regsiter, blacklist, user, spam
-Requires at least: 6
-Tested up to: 8.2
-Requires PHP: 7
+Tags: register, blacklist, user, spam, filter, security
+Requires at least: 6.0
+Tested up to: 6.4.2
+Requires PHP: 7.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
-Stable tag: 1.19
-
+Stable tag: 1.20
 
 Prevents registration with specified email domains and email addresses, that you can add in the Plugin settings.
 
