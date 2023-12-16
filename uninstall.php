@@ -20,11 +20,6 @@ if ( $delete_db_tables ) {
 
 // Delete the option for deleting tables on plugin deactivation
 delete_option( 'reg_black_delete_db_tables' );
-
-$reg_black_file = plugin_dir_path( __FILE__ ) . 'register-blacklist.php';
-
-if ( file_exists( $reg_black_file ) ) {
-    unlink( $reg_black_file );
-}
+delete_option('reg_black_version');
 
 ?>

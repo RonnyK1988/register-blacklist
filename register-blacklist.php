@@ -3,7 +3,7 @@
 /*
     * Plugin Name:          Register Blacklist
     * Description:          Prevents registration with specified email domains and email addresses.
-    * Version:              1.20
+    * Version:              1.23
     * Requires at least:    6.0
     * Requires PHP:         7.2
     * Author:               Ronny Kreuzberg
@@ -15,103 +15,151 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+
+
 function reg_black_activate() {
 
     global $wpdb;
+    $reg_black_current_version = 1.23;
 
-    $table_name_domains = $wpdb->prefix . 'reg_black_domains';
-    $table_name_emails = $wpdb->prefix . 'reg_black_emails';
-    $table_name_attempts = $wpdb->prefix . 'reg_black_attempts';
-    $table_name_options = $wpdb->prefix . 'reg_black_options';
+    // Check if activated before -> $initial_domains wont be added again if deleted before
 
-    $charset_collate = $wpdb->get_charset_collate();
+    if ( empty( get_option( 'reg_black_version' ) ) ) { 
 
-    $sql_domains = "CREATE TABLE IF NOT EXISTS $table_name_domains (
+        add_option( 'reg_black_version', $reg_black_current_version );
 
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        domain varchar(255) NOT NULL,
-        PRIMARY KEY  (id)
+        $reg_black_domains_table = $wpdb->prefix . 'reg_black_domains';
+        $reg_black_emails_table = $wpdb->prefix . 'reg_black_emails';
+        $reg_black_attempts_table = $wpdb->prefix . 'reg_black_attempts';
 
-    ) $charset_collate;";
+        $charset_collate = $wpdb->get_charset_collate();
 
-    $sql_emails = "CREATE TABLE IF NOT EXISTS $table_name_emails (
+        $sql_domains = "CREATE TABLE IF NOT EXISTS $reg_black_domains_table (
 
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        email varchar(255) NOT NULL,
-        PRIMARY KEY  (id)
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            domain varchar(255) NOT NULL,
+            PRIMARY KEY  (id)
 
-    ) $charset_collate;";
+        ) $charset_collate;";
 
-    $sql_attempts = "CREATE TABLE IF NOT EXISTS $table_name_attempts (
+        $sql_emails = "CREATE TABLE IF NOT EXISTS $reg_black_emails_table (
 
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        domain varchar(255) NOT NULL,
-        email varchar(255) NOT NULL,
-        blocked_attempts_count int(11) NOT NULL DEFAULT 0,
-        last_login_attempt datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-        PRIMARY KEY  (id)
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            email varchar(255) NOT NULL,
+            PRIMARY KEY  (id)
 
-    ) $charset_collate;";
+        ) $charset_collate;";
 
-    $sql_options = "CREATE TABLE IF NOT EXISTS $table_name_options (
+        $sql_attempts = "CREATE TABLE IF NOT EXISTS $reg_black_attempts_table (
 
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        delete_on_deactivation tinyint(1) NOT NULL DEFAULT 0,
-        PRIMARY KEY  (id)
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            domain varchar(255) NOT NULL,
+            email varchar(255) NOT NULL,
+            blocked_attempts_count int(11) NOT NULL DEFAULT 0,
+            last_login_attempt datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            PRIMARY KEY  (id)
 
-    ) $charset_collate;";
+        ) $charset_collate;";
 
-    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-    dbDelta( $sql_domains );
-    dbDelta( $sql_emails );
-    dbDelta( $sql_attempts );
-    dbDelta( $sql_options );
+        dbDelta( $sql_domains );
+        dbDelta( $sql_emails );
+        dbDelta( $sql_attempts );
 
-    // An array of domains to add to the domain table upon activation
+        // An array of domains to add to the domain table upon first activation
 
-    $initial_domains = array(
-        '1secmail.com',
-        '1secmail.org',
-        'captchas.biz',
-        'circlebpo.com',
-        'decaptcha.biz',
-        'gemination.hair',
-        'gemination.hair',
-        'getadsnow.org',
-        'hotpublisher.org',
-        'mailbab.com',
-        'mailkv.com',
-        'maillsk.com',
-        'maillv.com',
-        'oonmail.com',
-        'voiceoftruth.info',
-        'znemail.com'
-    );
+        $initial_domains = array(
+            '1secmail.com',
+            '1secmail.org',
+            'bheps.com',
+            'captchas.biz',
+            'circlebpo.com',
+            'decaptcha.biz',
+            'gemination.hair',
+            'getadsnow.org',
+            'hotpublisher.org',
+            'mailbab.com',
+            'mailkv.com',
+            'maillsk.com',
+            'maillv.com',
+            'oonmail.com',
+            'rottack.biz',
+            'silesia.life',
+            'tb-ndfl1.ru',
+            'voiceoftruth.info',
+            'znemail.com',
+        );
 
-    // Get the existing domains from the database
+        // Get the existing domains from the database
 
-    $existing_domains = $wpdb->get_col("SELECT domain FROM $table_name_domains");
+        $existing_domains = $wpdb->get_col("SELECT domain FROM $reg_black_domains_table");
 
-    // Add the domains if they don't already exist
-    
-    foreach ($initial_domains as $domain) {
+        // Add the domains if they don't already exist
+        
+        foreach ($initial_domains as $domain) {
 
-        if ( ! in_array($domain, $existing_domains ) ) {
+            if ( ! in_array($domain, $existing_domains ) ) {
 
-            $wpdb->insert( $table_name_domains, array( 'domain' => $domain ) );
+                $wpdb->insert( $reg_black_domains_table, array( 'domain' => $domain ) );
+            }
         }
+
+        add_option( 'reg_black_delete_db_tables', 0 );
+
     }
-
-    add_option( 'reg_black_delete_db_tables', 0 );
-
 }
 
 register_activation_hook( __FILE__, 'reg_black_activate' );
 
+
+// New Spam Domains to add to DB
+
+add_action( 'plugins_loaded', 'reg_black_new_domains' );
+
+function reg_black_new_domains() {
+
+    global $wpdb;
+    $reg_black_current_version = 1.23;
+    $reg_black_options_version = get_option('reg_black_version');
+
+    $new_domains = array(
+        'gmail.com',
+        'hotmail.com',
+        'outlook.com',
+    );
+
+    $reg_black_domains_table = $wpdb->prefix . 'reg_black_domains';
+
+    $existing_domains = $wpdb->get_col(
+        "SELECT domain 
+        FROM $reg_black_domains_table"
+    );
+
+    // Only runs after updates to the plugin
+    if ( $reg_black_options_version < $reg_black_current_version ) {
+
+        // Add the domains if they don't already exist
+        foreach ( $new_domains as $domain ) {
+
+            if ( ! in_array( $domain, $existing_domains ) ) {
+
+                $wpdb->insert( $reg_black_domains_table, array( 'domain' => $domain ) );
+
+            }
+
+        }
+
+    }
+
+    update_option('reg_black_version', $reg_black_current_version );
+
+}
+
 // Function to block registration with specified email domains
 
-function reg_black_registration_check( $errors, $sanitized_user_login, $user_email ) {
+function reg_black_registration_check( $errors, $user_email ) {
 
     global $wpdb;
 
@@ -148,7 +196,7 @@ add_filter( 'registration_errors', 'reg_black_registration_check', 10, 3 );
 
 function reg_black_settings_link( $links ) {
 
-    $settings_link = '<a href="options-general.php?page=reg-black-settings">' _e( "Settings" ) '</a>';
+    $settings_link = '<a href="options-general.php?page=reg-black-settings">' . __( "Settings" ) . '</a>';
 
     array_unshift( $links, $settings_link );
 
@@ -162,7 +210,7 @@ add_filter( 'plugin_action_links_$plugin_basename', 'reg_black_settings_link' );
 
 // Create settings pages
 
-function reg_black_settings_page() {
+function reg_black_settings_page(  ) {
 
     if ( ! current_user_can( 'manage_options' ) ) {
 
@@ -189,15 +237,19 @@ function reg_black_settings_page() {
 
         foreach ($blocked_domains as $domain) {
 
-            $wpdb->insert(
+            $existing_domain = $wpdb->get_var( $wpdb->prepare( 
 
-                "{$wpdb->prefix}reg_black_domains",
-
-                array('domain' => $domain),
-
-                array('%s')
+                "SELECT COUNT(*) 
+                FROM {$wpdb->prefix}reg_black_domains 
+                WHERE domain = %s", $domain)
 
             );
+
+            if ( $existing_domain == 0 ) {
+
+                $wpdb->insert( "{$wpdb->prefix}reg_black_domains", array( 'domain' => $domain ), array( '%s' ) );
+
+            }
 
         }
 
@@ -211,13 +263,18 @@ function reg_black_settings_page() {
 
         foreach ( $blocked_emails as $email ) {
 
-            $wpdb->insert(
+            $existing_emails = $wpdb->get_var( $wpdb->prepare(
 
-                "{$wpdb->prefix}reg_black_emails",
-                array('email' => $email),
-                array('%s')
-
+                "SELECT COUNT(*) 
+                FROM {$wpdb->prefix}reg_black_emails 
+                WHERE email = %s", $email)
             );
+   
+            if ( $existing_emails == 0)  {
+
+                $wpdb->insert( "{$wpdb->prefix}reg_black_emails", array( 'emails' => $email ), array( '%s' ) );
+
+            }
         }
     }
 
@@ -260,7 +317,7 @@ function reg_black_settings_page() {
 
             <h3><?php _e( 'Blocked Domains', 'register-blacklist' ); ?></h3>
 
-            <form method="post" action="">
+            <form method="post">
 
                 <label for="reg_black_domains"><?php _e( 'Blocked Domains (comma-separated):', 'register-blacklist' ); ?></label>
 
@@ -435,129 +492,6 @@ function reg_black_settings_page() {
 
     </div>
 
-    <script defer>
-
-        document.addEventListener('DOMContentLoaded', function () {
-
-            // Set the "Domains" tab as active initially
-
-            document.querySelector('.nav-tab[href="#tab-domains"]').classList.add('nav-tab-active');
-
-            // Add click event listeners to toggle tab visibility
-
-            const tabs = document.querySelectorAll('.nav-tab');
-
-            tabs.forEach(tab => {
-
-                tab.addEventListener('click', (event) => {
-
-                    event.preventDefault();
-
-                    const targetId = event.target.getAttribute('href').substr(1);
-
-                    document.querySelectorAll('.nav-tab').forEach(navTab => navTab.classList.remove('nav-tab-active'));
-
-                    event.target.classList.add('nav-tab-active');
-
-                    document.querySelectorAll('#tab-domains, #tab-emails, #tab-settings, #tab-statistics').forEach(tabContent => {
-
-                        if (tabContent.id === targetId) {
-
-                            tabContent.style.display = 'block';
-
-                        } else {
-
-                            tabContent.style.display = 'none';
-
-                        }
-
-                    });
-
-                });
-
-            });
-
-        });
-
-        // Add a click event listener to the delete links
-
-        const deleteLinks = document.querySelectorAll(".delete-link");
-
-        deleteLinks.forEach(link => {
-
-            link.addEventListener("click", function (event) {
-
-                event.preventDefault();
-
-                const type = this.getAttribute("data-type");
-
-                const value = this.getAttribute("data-value");
-
-                if (confirm("Are you sure you want to delete this " + type + "?")) {
-
-                    // Generate and use a nonce
-
-                    const nonce = document.querySelector("#reg-black-nonce").value;
-
-                    // Send an AJAX request to delete the domain or email
-
-                    const data = new URLSearchParams({
-
-                        action: "reg_black_delete_entry",
-
-                        type,
-
-                        value,
-
-                        _wpnonce: nonce,
-
-                    });
-
-                    fetch(ajaxurl, {
-
-                        method: "POST",
-
-                        headers: {
-
-                            "Content-Type": "application/x-www-form-urlencoded",
-
-                        },
-
-                        body: data,
-                    })
-
-                    .then(response => response.json())
-
-                    .then(result => {
-
-                        if (result.success) {
-
-                            // Reload the page after deletion
-
-                            location.reload();
-
-                        } else {
-
-                            alert("Failed to delete " + type + ". Please try again.");
-
-                        }
-
-                    })
-
-                    .catch(error => {
-
-                        alert("An error occurred while deleting " + type + ".");
-
-                    });
-
-                }
-
-            });
-        
-        });
-
-    </script>
-
     <?php
 }
 
@@ -646,12 +580,14 @@ add_action( "wp_ajax_nopriv_reg_black_delete_entry", "reg_black_delete_entry" );
 
 // CSS Styles
 
-function reg_black_enqueue_admin_styles() {
+function reg_black_enqueue_admin_scripts() {
 
-    wp_enqueue_style( 'reg-black-admin-styles', plugins_url( 'css/reg-black-styles.css', __FILE__ ));
+    wp_enqueue_style( 'reg-black-admin-styles', plugins_url( 'admin/css/reg-black-styles.css', __FILE__ ) );
+
+    wp_enqueue_script('reg-black-js', plugins_url('admin/js/reg-black-admin.js', __FILE__), array(), null, true);
 
 }
 
-add_action( 'admin_enqueue_scripts', 'reg_black_enqueue_admin_styles' );
+add_action( 'admin_enqueue_scripts', 'reg_black_enqueue_admin_scripts' );
 
 ?>
