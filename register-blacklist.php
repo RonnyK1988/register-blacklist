@@ -3,7 +3,7 @@
 /*
     * Plugin Name:          Register Blacklist
     * Description:          Prevents registration with specified email domains and email addresses.
-    * Version:              1.23
+    * Version:              1.24
     * Requires at least:    6.0
     * Requires PHP:         7.2
     * Author:               Ronny Kreuzberg
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 function reg_black_activate() {
 
     global $wpdb;
-    $reg_black_current_version = 1.23;
+    $reg_black_current_version = 1.24;
 
     // Check if activated before -> $initial_domains wont be added again if deleted before
 
@@ -121,7 +121,7 @@ add_action( 'plugins_loaded', 'reg_black_new_domains' );
 function reg_black_new_domains() {
 
     global $wpdb;
-    $reg_black_current_version = 1.23;
+    $reg_black_current_version = 1.24;
     $reg_black_options_version = get_option('reg_black_version');
 
     $new_domains = array(

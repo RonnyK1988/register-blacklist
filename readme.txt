@@ -6,7 +6,7 @@ Tested up to: 6.4.2
 Requires PHP: 7.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
-Stable tag: 1.23
+Stable tag: 1.24
 
 Prevents registration with specified email domains and email addresses, that you can add in the Plugin settings.
 
