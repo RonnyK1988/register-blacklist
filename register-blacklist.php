@@ -100,7 +100,7 @@ function reg_black_activate() {
         
         foreach ($initial_domains as $domain) {
 
-            if ( ! in_array($domain, $existing_domains ) ) {
+            if ( ! in_array($domain, $existing_domains, true ) ) {
 
                 $wpdb->insert( $reg_black_domains_table, array( 'domain' => $domain ) );
             }
@@ -143,7 +143,7 @@ function reg_black_new_domains() {
         // Add the domains if they don't already exist
         foreach ( $new_domains as $domain ) {
 
-            if ( ! in_array( $domain, $existing_domains ) ) {
+            if ( ! in_array( $domain, $existing_domains, true ) ) {
 
                 $wpdb->insert( $reg_black_domains_table, array( 'domain' => $domain ) );
 
@@ -169,7 +169,7 @@ function reg_black_registration_check( $errors, $user_email ) {
 
     list($user, $domain) = explode('@', $user_email);
 
-    if ( in_array( $domain, $blocked_domains ) || in_array( $user_email, $blocked_emails ) ) {
+    if ( in_array( $domain, $blocked_domains, true ) || in_array( $user_email, $blocked_emails, true ) ) {
 
         $errors->add( 'email_blocked', 'Registration with this email or domain is not allowed.' );
 
