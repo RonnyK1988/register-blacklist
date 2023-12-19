@@ -196,7 +196,7 @@ add_filter( 'registration_errors', 'reg_black_registration_check', 10, 3 );
 
 function reg_black_settings_link( $links ) {
 
-    $settings_link = '<a href="options-general.php?page=reg-black-settings">' . __( "Settings" ) . '</a>';
+    $settings_link = '<a href="options-general.php?page=reg-black-settings">' . esc_html_e( "Settings", "register-blacklist" ) . '</a>';
 
     array_unshift( $links, $settings_link );
 
@@ -218,16 +218,22 @@ function reg_black_settings_page(  ) {
 
     }
 
+    if ( ! isset( $_POST["_wpnonce"] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST["_wpnonce"] ) ), "reg_black_nonce") ) {
+
+        wp_die( esc_html__( 'Nonce verification failed.', 'register-blacklist' ) );
+
+    }
+
     global $wpdb;
     
     $delete_db_tables = get_option( 'reg_black_delete_db_tables', false );
 
     $reg_black_nonce = wp_create_nonce( "reg_black_nonce" ); ?>
 
-	<input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php echo esc_attr( $reg_black_nonce ); ?>">
+	<input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php esc_attr_e( $reg_black_nonce ); ?>">
 
 
-    <?php if ( isset ($_POST['reg_black_domains'] ) ) {
+    <?php if ( isset( $_POST['reg_black_domains'] ) ) {
 
         $blocked_domains = sanitize_text_field( $_POST['reg_black_domains'] );
 
@@ -235,13 +241,13 @@ function reg_black_settings_page(  ) {
 
         $blocked_domains = array_map( 'trim', $blocked_domains );
 
-        foreach ($blocked_domains as $domain) {
+        foreach ( $blocked_domains as $domain ) {
 
             $existing_domain = $wpdb->get_var( $wpdb->prepare( 
 
                 "SELECT COUNT(*) 
                 FROM {$wpdb->prefix}reg_black_domains 
-                WHERE domain = %s", $domain)
+                WHERE domain = %s", $domain )
 
             );
 
@@ -289,8 +295,19 @@ function reg_black_settings_page(  ) {
 
     $delete_db_tables = get_option( 'reg_black_delete_db_tables', 0 );
 
-    $blocked_domains = $wpdb->get_col( "SELECT domain FROM {$wpdb->prefix}reg_black_domains" );
-    $blocked_emails = $wpdb->get_col( "SELECT email FROM {$wpdb->prefix}reg_black_emails" );
+    $blocked_domains = $wpdb->get_col( $wpdb->prepare( 
+
+        "SELECT domain 
+        FROM {$wpdb->prefix}reg_black_domains" )
+
+    );
+
+    $blocked_emails = $wpdb->get_col( $wpdb->prepare(
+
+        "SELECT email 
+        FROM {$wpdb->prefix}reg_black_emails" )
+
+    );
 
     sort( $blocked_domains );
     sort( $blocked_emails );
@@ -299,31 +316,31 @@ function reg_black_settings_page(  ) {
 
     <div class="wrap">
 
-        <h2><?php _e( 'Register Blacklist Settings', 'register-blacklist' ); ?></h2>
+        <h2><?php esct_html_e( 'Register Blacklist Settings', 'register-blacklist' ); ?></h2>
 
         <h2 class="nav-tab-wrapper">
 
-            <a class="nav-tab" href="#tab-domains"><?php _e( 'Domains', 'register-blacklist' ); ?></a>
+            <a class="nav-tab" href="#tab-domains"><?php esct_html_e( 'Domains', 'register-blacklist' ); ?></a>
 
-            <a class="nav-tab" href="#tab-emails"><?php _e( 'Emails', 'register-blacklist' ); ?></a>
+            <a class="nav-tab" href="#tab-emails"><?php esct_html_e( 'Emails', 'register-blacklist' ); ?></a>
 
-            <a class="nav-tab" href="#tab-statistics"><?php _e( 'Blocked Attempts', 'register-blacklist' ); ?></a>
+            <a class="nav-tab" href="#tab-statistics"><?php esct_html_e( 'Blocked Attempts', 'register-blacklist' ); ?></a>
 
-            <a class="nav-tab" href="#tab-settings"><?php _e( 'Settings', 'register-blacklist' ); ?></a>
+            <a class="nav-tab" href="#tab-settings"><?php esct_html_e( 'Settings', 'register-blacklist' ); ?></a>
 
         </h2>
 
         <div id="tab-domains">
 
-            <h3><?php _e( 'Blocked Domains', 'register-blacklist' ); ?></h3>
+            <h3><?php esct_html_e( 'Blocked Domains', 'register-blacklist' ); ?></h3>
 
             <form method="post">
 
-                <label for="reg_black_domains"><?php _e( 'Blocked Domains (comma-separated):', 'register-blacklist' ); ?></label>
+                <label for="reg_black_domains"><?php esct_html_e( 'Blocked Domains (comma-separated):', 'register-blacklist' ); ?></label>
 
-                <input type="text" id="reg_black_domains" name="reg_black_domains" placeholder="<?php _e( 'Enter a domain', 'register-blacklist' ); ?>">
+                <input type="text" id="reg_black_domains" name="reg_black_domains" placeholder="<?php esct_html_e( 'Enter a domain', 'register-blacklist' ); ?>">
 
-                <input type="submit" class="button-primary" value="<?php _e( 'Add Domain', 'register-blacklist' ); ?>">
+                <input type="submit" class="button-primary" value="<?php esct_html_e( 'Add Domain', 'register-blacklist' ); ?>">
 
             </form>
 
@@ -333,9 +350,9 @@ function reg_black_settings_page(  ) {
 
                     <li>
 
-                        <?php echo esc_html( $domain ); ?>
+                        <?php  esc_html_e( $domain ); ?>
 
-                        <a class="delete-link" data-type="domain" data-value="<?php echo esc_attr( $domain ); ?>" href="#"><?php _e( 'Delete', 'register-blacklist' ); ?></a>
+                        <a class="delete-link" data-type="domain" data-value="<?php esc_attr_e( $domain ); ?>" href="#"><?php esct_html_e( 'Delete', 'register-blacklist' ); ?></a>
 
                     </li>
 
@@ -347,15 +364,15 @@ function reg_black_settings_page(  ) {
 
         <div id="tab-emails">
 
-            <h3><?php _e( 'Blocked Email Addresses', 'register-blacklist' ); ?></h3>
+            <h3><?php esct_html_e( 'Blocked Email Addresses', 'register-blacklist' ); ?></h3>
 
             <form method="post">
 
-                <label for="reg_black_emails"><?php _e( 'Blocked Email Addresses (comma-separated):', 'register-blacklist' ); ?></label>
+                <label for="reg_black_emails"><?php esct_html_e( 'Blocked Email Addresses (comma-separated):', 'register-blacklist' ); ?></label>
 
-                <input type="text" id="reg_black_emails" name="reg_black_emails" placeholder="<?php _e( 'Enter an email address', 'register-blacklist' ); ?>">
+                <input type="text" id="reg_black_emails" name="reg_black_emails" placeholder="<?php esct_html_e( 'Enter an email address', 'register-blacklist' ); ?>">
 
-                <input type="submit" class="button-primary" value="<?php _e( 'Add Email', 'register-blacklist' ); ?>">
+                <input type="submit" class="button-primary" value="<?php esct_html_e( 'Add Email', 'register-blacklist' ); ?>">
 
             </form>
 
@@ -365,9 +382,9 @@ function reg_black_settings_page(  ) {
 
                     <li>
 
-                        <?php echo esc_html( $email ); ?>
+                        <?php  esc_html_e( $email ); ?>
 
-                        <a class="delete-link" data-type="email" data-value="<?php echo esc_attr( $email ) ; ?>" href="#"><?php _e( 'Delete', 'register-blacklist' ); ?></a>
+                        <a class="delete-link" data-type="email" data-value="<?php esc_attr_e( $email ) ; ?>" href="#"><?php esct_html_e( 'Delete', 'register-blacklist' ); ?></a>
 
                     </li>
 
@@ -379,112 +396,141 @@ function reg_black_settings_page(  ) {
 
         <div id="tab-statistics">
 
-            <h3><?php _e( 'Blocked Register Attempts', 'register-blacklist' ); ?></h3>
+            <h3><?php esc_html_e( 'Blocked Register Attempts', 'register-blacklist' ); ?></h3>
 
             <?php
 
-            $blocked_domains = $wpdb->get_results(
+            $blocked_domains = $wpdb->get_results( $wpdb->prepare(
                 
                 "SELECT domain, SUM(blocked_attempts_count) 
                 AS blocked_count, MAX(last_login_attempt) 
                 AS last_attempt 
                 FROM {$wpdb->prefix}reg_black_attempts 
-                WHERE domain IS NOT NULL GROUP BY domain"
+                WHERE domain IS NOT NULL GROUP BY domain" )
             );
             
-            $blocked_emails = $wpdb->get_results(
-
+            $blocked_emails = $wpdb->get_results( $wpdb->prepare(
+ 
                 "SELECT domain, email, SUM(blocked_attempts_count) 
                 AS blocked_count, MAX(last_login_attempt) 
                 AS last_attempt 
                 FROM {$wpdb->prefix}reg_black_attempts 
-                WHERE email IS NOT NULL GROUP BY email"
+                WHERE email IS NOT NULL GROUP BY email" )
 
             );
 
-            if ( ! empty( $blocked_domains) ) {
+            if ( ! empty( $blocked_domains ) ) : ?>
 
-                echo '<h4>' . __( 'Blocked Domains', 'register-blacklist' ) . '</h4>';
+                <div>
 
-                echo '<table class="wp-list-table widefat fixed striped">';
+                    <h4><?php esc_html_e( 'Blocked Domains', 'register-blacklist' ); ?></h4>
+            
+                    <table class="wp-list-table widefat fixed striped">
 
-                echo '<thead><tr><th>' . __( 'Domain', 'register-blacklist' ) . '</th><th>' . __( 'Blocked Attempts', 'register-blacklist' ) . '</th><th>' . __( 'Last Login Attempt', 'register-blacklist' ) . '</th></tr></thead>';
+                        <thead>
 
-                echo '<tbody>';
+                            <tr>
 
-                foreach ( $blocked_domains as $domain ) {
+                                <th><?php esc_html_e( 'Domain', 'register-blacklist' ); ?></th>
 
-                    echo '<tr>';
+                                <th><?php esc_html_e( 'Blocked Attempts', 'register-blacklist' ); ?></th>
 
-                    echo '<td>' . esc_html( $domain->domain ) . '</td>';
+                                <th><?php esc_html_e( 'Last Login Attempt', 'register-blacklist' ); ?></th>
+                            </tr>
 
-                    echo '<td>' . intval( $domain->blocked_count ) . '</td>';
+                        </thead>
 
-                    echo '<td>' . esc_html( $domain->last_attempt ) . '</td>';
+                        <tbody>
 
-                    echo '</tr>';
+                            <?php foreach ( $blocked_domains as $domain ) : ?>
 
-                }
+                                <tr>
 
-                echo '</tbody>';
+                                    <td><?php  esc_html_e( $domain->domain ); ?></td>
 
-                echo '</table>';
+                                    <td><?php  esc_html_e( intval( $domain->blocked_count ) ); ?></td>
 
-            } else {
+                                    <td><?php  esc_html_e( $domain->last_attempt ); ?></td>
 
-                echo '<p>' . __(' No blocked domains recorded.', 'register-blacklist' ) . '</p>';
+                                </tr>
 
-            }
+                            <?php endforeach; ?>
 
-            if ( ! empty( $blocked_emails ) ) {
+                        </tbody>
 
-                echo '<h4>' . __( 'Blocked Email Addresses', 'register-blacklist' ) . '</h4>';
+                    </table>
 
-                echo '<table class="wp-list-table widefat fixed striped">';
+                </div>
 
-                echo '<thead><tr><th>' . __( 'Email', 'register-blacklist' ) . '</th><th>' . __( 'Blocked Attempts', 'register-blacklist' ) . '</th><th>' . __( 'Last Login Attempt', 'register-blacklist' ) . '</th></tr></thead>';
+            <?php else : ?>
 
-                echo '<tbody>';
+                <p><?php esc_html_e( 'No blocked domains recorded.', 'register-blacklist' ); ?></p>
 
-                foreach ( $blocked_emails as $email ) {
+            <?php endif; ?>
+            
+            <?php if ( ! empty( $blocked_emails ) ) : ?>
 
-                    echo '<tr>';
+                <div>
 
-                    echo '<td>' . esc_html( $email->email ) . '</td>';
+                    <h4><?php esc_html_e( 'Blocked Email Addresses', 'register-blacklist' ); ?></h4>
+            
+                    <table class="wp-list-table widefat fixed striped">
 
-                    echo '<td>' . intval( $email->blocked_count ) . '</td>';
+                        <thead>
 
-                    echo '<td>' . esc_html( $email->last_attempt ) . '</td>';
+                            <tr>
 
-                    echo '</tr>';
+                                <th><?php esc_html_e( 'Email', 'register-blacklist' ); ?></th>
 
-                }
+                                <th><?php esc_html_e( 'Blocked Attempts', 'register-blacklist' ); ?></th>
 
-                echo '</tbody>';
+                                <th><?php esc_html_e( 'Last Login Attempt', 'register-blacklist' ); ?></th>
 
-                echo '</table>';
+                            </tr>
 
-            } else {
+                        </thead>
 
-                echo '<p>' . __( 'No blocked email addresses recorded.', 'register-blacklist' ) . '</p>';
+                        <tbody>
 
-            }
+                            <?php foreach ( $blocked_emails as $email ) : ?>
 
-            ?>
+                                <tr>
+
+                                    <td><?php  esc_html_e( $email->email ); ?></td>
+
+                                    <td><?php  esc_html_e( intval( $email->blocked_count) ); ?></td>
+
+                                    <td><?php  esc_html_e( $email->last_attempt ); ?></td>
+
+                                </tr>
+
+                            <?php endforeach; ?>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            <?php else : ?>
+
+                <p><?php esc_html_e( 'No blocked email addresses recorded.', 'register-blacklist' ); ?></p>
+
+            <?php endif; ?>
 
         </div>
-
+                    
         <div id="tab-settings">
 
-            <h3><?php _e( 'Plugin Settings', 'register-blacklist' ); ?></h3>
+            <h3><?php esct_html_e( 'Plugin Settings', 'register-blacklist' ); ?></h3>
 
             <form method="post">
 
-                <label for="reg_black_delete_db_tables"><?php _e( 'Delete all files and DB Tables on Plugin Deactivation:', 'register-blacklist' ); ?></label>
+                <label for="reg_black_delete_db_tables"><?php esct_html_e( 'Delete all files and DB Tables on Plugin Deactivation:', 'register-blacklist' ); ?></label>
 
-                <input type="checkbox" id="reg_black_delete_db_tables" name="reg_black_delete_db_tables" <?php echo $delete_db_tables ? 'checked="checked"' : ''; ?>>
+                <input type="checkbox" id="reg_black_delete_db_tables" name="reg_black_delete_db_tables" <?php  esc_html_e( $delete_db_tables ) ? 'checked="checked"' : ''; ?>>
 
-                <input type="submit" class="button-primary" name="reg_black_settings_submit" value="<?php _e( 'Save Settings', 'register-blacklist' ); ?>">
+                <input type="submit" class="button-primary" name="reg_black_settings_submit" value="<?php esct_html_e( 'Save Settings', 'register-blacklist' ); ?>">
 
             </form>
 
