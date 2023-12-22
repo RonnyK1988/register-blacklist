@@ -250,11 +250,18 @@ function reg_black_settings_page() {
 
             if ($existing_domain == 0) {
 
-                $wpdb->insert("{$wpdb->prefix}reg_black_domains", array('domain' => $domain), array('%s'));
-                echo "Inserted domain: $domain<br>"; // Add debug statements
-            }
+                $wpdb->insert("{$wpdb->prefix}reg_black_domains", array('domain' => $domain), array('%s')); ?>
+
+                <p>Added domain: <?php echo esc_html( $domain ); ?> to blacklist</p>
+
+            <?php } else { ?>
+
+                <p>Domain <?php echo esc_html( $domain ) ;?> is already blocked<br></p>
+
+            <?php }
        
         }
+
     }
 
     if (isset($_POST['reg_black_emails']) && isset( $_POST["reg-black-nonce"] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST["reg-black-nonce"] ) ), "reg_black_nonce") ) {
@@ -274,9 +281,16 @@ function reg_black_settings_page() {
    
             if ( $existing_emails === 0)  {
 
-                $wpdb->insert( "{$wpdb->prefix}reg_black_emails", array( 'emails' => $email ), array( '%s' ) );
+                $wpdb->insert( "{$wpdb->prefix}reg_black_emails", array( 'emails' => $email ), array( '%s' ) ); ?>
 
-            }
+                <p>Added email: <?php echo esc_html( $email ); ?> to Blacklist</p>
+
+            <?php } else { ?>
+
+                <p>Email <?php echo esc_html( $email ) ;?> is already blocked.<br></p>
+
+        <?php }
+
         }
     }
 
