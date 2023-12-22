@@ -291,17 +291,17 @@ function reg_black_settings_page() {
 
     $delete_db_tables = get_option( 'reg_black_delete_db_tables', 0 );
 
-    $blocked_domains = $wpdb->get_col( $wpdb->prepare( 
+    $blocked_domains = $wpdb->get_col(  
 
         "SELECT domain
-        FROM {$wpdb->prefix}reg_black_domains" )
+        FROM {$wpdb->prefix}reg_black_domains" 
 
     );
 
-    $blocked_emails = $wpdb->get_col( $wpdb->prepare(
+    $blocked_emails = $wpdb->get_col(
 
         "SELECT email 
-        FROM {$wpdb->prefix}reg_black_emails" )
+        FROM {$wpdb->prefix}reg_black_emails"
 
     );
 
