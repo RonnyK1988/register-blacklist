@@ -163,23 +163,23 @@ function reg_black_new_domains() {
 
 // Function to block registration with specified email domains
 
-function reg_black_registration_check( $errors, $user_email, $sanized_user_login ) {
+function reg_black_registration_check( $errors, $sanitized_user_login, $user_email ) {
 
     global $wpdb;
 
-    $blocked_domains = $wpdb->get_col("SELECT domain FROM {$wpdb->prefix}reg_black_domains");
+    $blocked_domains = $wpdb->get_col( "SELECT domain FROM {$wpdb->prefix}reg_black_domains" );
 
-    $blocked_emails = $wpdb->get_col("SELECT email FROM {$wpdb->prefix}reg_black_emails");
+    $blocked_emails = $wpdb->get_col( "SELECT email FROM {$wpdb->prefix}reg_black_emails" );
 
-    list($user, $domain) = explode('@', $user_email);
+    list( $user, $domain ) = explode( '@', $user_email );
 
-    if ( in_array( $domain, $blocked_domains, true ) || in_array( $user_email, $blocked_emails, true ) ) {
+    if ( in_array( $domain, $blocked_domains ) || in_array( $user_email, $blocked_emails ) ) {
 
         $errors->add( 'email_blocked', 'Registration with this email or domain is not allowed.' );
 
         // Update statistics for blocked attempts
 
-        $wpdb->query($wpdb->prepare(
+        $wpdb->query( $wpdb->prepare(
 
             "INSERT INTO {$wpdb->prefix}reg_black_attempts (domain, email, blocked_attempts_count, last_login_attempt)
             VALUES (%s, %s, 1, NOW())
