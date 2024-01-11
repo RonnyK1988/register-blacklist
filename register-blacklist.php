@@ -3,7 +3,7 @@
 /*
     * Plugin Name:          Register Blacklist
     * Description:          Prevents registration with specified email domains and email addresses.
-    * Version:              1.24
+    * Version:              1.25
     * Requires at least:    6.0
     * Requires PHP:         7.2
     * Author:               Ronny Kreuzberg
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 function reg_black_activate() {
 
     global $wpdb;
-    $reg_black_current_version = 1.24;
+    $reg_black_current_version = 1.25;
 
     // Check if activated before -> $initial_domains wont be added again if deleted before
 
@@ -121,7 +121,7 @@ add_action( 'plugins_loaded', 'reg_black_new_domains' );
 function reg_black_new_domains() {
 
     global $wpdb;
-    $reg_black_current_version = 1.24;
+    $reg_black_current_version = 1.25;
     $reg_black_options_version = get_option('reg_black_version');
 
     $new_domains = array(
@@ -161,11 +161,46 @@ function reg_black_new_domains() {
 
 }
 
+
+// Adds a hidden field to chec for bots
+
+function reg_black_bot_check() { ?>
+
+    <p class="reg-black-bot-check">
+
+        <label for="hp_user">Leave this field empty</label>
+
+        <input type="text" name="hp_user" id="hp_user" value="" size="25" tabindex="20" />
+
+    </p>
+
+    <?php
+
+}
+
+add_action('register_form', 'reg_black_bot_check');
+
 // Function to block registration with specified email domains
 
 function reg_black_registration_check( $errors, $sanitized_user_login, $user_email ) {
 
     global $wpdb;
+
+    if (!empty($_POST['hp_user'])) {
+
+        $reg_black_bot_email = sanitize_email($user_email);
+
+        // Add email to the reg black emails table
+
+        $wpdb->insert(
+            $wpdb->prefix . 'reg_black_emails',
+            array('email' => $reg_black_bot_email),
+            array('%s')
+        );
+
+          $errors->add('honeypot', '<strong>ERROR</strong>: Leave the honeypot field empty.');
+
+    }
 
     $blocked_domains = $wpdb->get_col( "SELECT domain FROM {$wpdb->prefix}reg_black_domains" );
 
@@ -229,7 +264,7 @@ function reg_black_settings_page() {
     $reg_black_nonce = wp_create_nonce( "reg_black_nonce" ); ?>
 
     
-	<input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php esc_attr_e( $reg_black_nonce ); ?>">
+	<input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php echo esc_attr( $reg_black_nonce ); ?>">
 
     <?php 
 
@@ -346,7 +381,7 @@ function reg_black_settings_page() {
 
             <form method="post" action="">
 
-                <input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php esc_attr_e( $reg_black_nonce ); ?>">
+                <input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php echo esc_attr( $reg_black_nonce ); ?>">
 
                 <label for="reg_black_domains"><?php esc_html_e( 'Add new Domains to block (comma-separated):', 'register-blacklist' ); ?></label>
 
@@ -362,9 +397,9 @@ function reg_black_settings_page() {
 
                     <li>
 
-                        <?php  esc_html_e( $domain, 'register-blacklist' ); ?>
+                        <?php  echo esc_html( $domain ); ?>
 
-                        <a class="delete-link" data-type="domain" data-value="<?php esc_attr_e( $domain ); ?>" href="#"><?php esc_html_e( 'Delete', 'register-blacklist' ); ?></a>
+                        <a class="delete-link" data-type="domain" data-value="<?php echo esc_attr( $domain ); ?>" href="#"><?php esc_html_e( 'Delete', 'register-blacklist' ); ?></a>
 
                     </li>
 
@@ -380,7 +415,7 @@ function reg_black_settings_page() {
 
             <form method="post">
 
-                <input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php esc_attr_e( $reg_black_nonce ); ?>">
+                <input type="hidden" id="reg-black-nonce" name="reg-black-nonce" value="<?php echo esc_attr( $reg_black_nonce ); ?>">
 
                 <label for="reg_black_emails"><?php esc_html_e( 'Blocked Email Addresses (comma-separated):', 'register-blacklist' ); ?></label>
 
@@ -396,9 +431,9 @@ function reg_black_settings_page() {
 
                     <li>
 
-                        <?php  esc_html_e( $email ); ?>
+                        <?php  echo esc_html( $email ); ?>
 
-                        <a class="delete-link" data-type="email" data-value="<?php esc_attr_e( $email ) ; ?>" href="#"><?php esc_html_e( 'Delete', 'register-blacklist' ); ?></a>
+                        <a class="delete-link" data-type="email" data-value="<?php echo esc_attr( $email ) ; ?>" href="#"><?php esc_html_e( 'Delete', 'register-blacklist' ); ?></a>
 
                     </li>
 
@@ -460,11 +495,11 @@ function reg_black_settings_page() {
 
                                 <tr>
 
-                                    <td><?php  esc_html_e( $domain->domain ); ?></td>
+                                    <td><?php  echo esc_html( $domain->domain ); ?></td>
 
-                                    <td><?php  esc_html_e( intval( $domain->blocked_count ) ); ?></td>
+                                    <td><?php  echo esc_html( intval( $domain->blocked_count ) ); ?></td>
 
-                                    <td><?php  esc_html_e( $domain->last_attempt ); ?></td>
+                                    <td><?php  echo esc_html( $domain->last_attempt ); ?></td>
 
                                 </tr>
 
@@ -510,11 +545,11 @@ function reg_black_settings_page() {
 
                                 <tr>
 
-                                    <td><?php  esc_html_e( $email->email ); ?></td>
+                                    <td><?php  echo esc_html( $email->email ); ?></td>
 
-                                    <td><?php  esc_html_e( intval( $email->blocked_count) ); ?></td>
+                                    <td><?php  echo esc_html( intval( $email->blocked_count) ); ?></td>
 
-                                    <td><?php  esc_html_e( $email->last_attempt ); ?></td>
+                                    <td><?php  echo esc_html( $email->last_attempt ); ?></td>
 
                                 </tr>
 
@@ -542,7 +577,7 @@ function reg_black_settings_page() {
 
                 <label for="reg_black_delete_db_tables"><?php esc_html_e( 'Delete all files and DB Tables on Plugin Deactivation:', 'register-blacklist' ); ?></label>
 
-                <input type="checkbox" id="reg_black_delete_db_tables" name="reg_black_delete_db_tables" <?php  esc_html_e( $delete_db_tables ) ? 'checked="checked"' : ''; ?>>
+                <input type="checkbox" id="reg_black_delete_db_tables" name="reg_black_delete_db_tables" <?php  echo esc_html( $delete_db_tables ) ? 'checked="checked"' : ''; ?>>
 
                 <input type="submit" class="button-primary" name="reg_black_settings_submit" value="<?php esc_html_e( 'Save Settings', 'register-blacklist' ); ?>">
 
@@ -638,16 +673,27 @@ add_action( "wp_ajax_reg_black_delete_entry", "reg_black_delete_entry" );
 
 add_action( "wp_ajax_nopriv_reg_black_delete_entry", "reg_black_delete_entry" );
 
-// CSS Styles
+// Scripts for admin pages
 
 function reg_black_enqueue_admin_scripts() {
 
-    wp_enqueue_style( 'reg-black-admin-styles', plugins_url( 'admin/css/reg-black-styles.css', __FILE__ ) );
+    wp_enqueue_style( 'reg-black-admin-styles', plugins_url( 'admin/css/reg-black-admin-styles.css', __FILE__ ) );
 
     wp_enqueue_script('reg-black-js', plugins_url('admin/js/reg-black-admin.js', __FILE__), array(), null, true);
 
 }
 
 add_action( 'admin_enqueue_scripts', 'reg_black_enqueue_admin_scripts' );
+
+// Public scripts
+
+// Public scripts
+function reg_black_enqueue_public_scripts() {
+
+        wp_enqueue_style( 'reg-black-public-styles', plugins_url( 'public/css/reg-black-public-styles.css', __FILE__ ) );
+
+}
+
+add_action( 'login_enqueue_scripts', 'reg_black_enqueue_public_scripts' );
 
 ?>
