@@ -168,14 +168,15 @@ function reg_black_bot_check() { ?>
 
     <p class="reg-black-bot-check">
 
-        <label for="hp_user">Leave this field empty</label>
+        <label for="hp_user">Nothing to see here:</label>
 
         <input type="text" name="hp_user" id="hp_user" value="" size="25" tabindex="20" />
+
+        <?php wp_nonce_field('reg_black_nonce', 'reg_black_nonce'); ?>
 
     </p>
 
     <?php
-
 }
 
 add_action('register_form', 'reg_black_bot_check');
@@ -186,47 +187,49 @@ function reg_black_registration_check( $errors, $sanitized_user_login, $user_ema
 
     global $wpdb;
 
-    if (!empty($_POST['hp_user'])) {
+    // Verify nonce
 
-        $reg_black_bot_email = sanitize_email($user_email);
+    if ( empty( $_POST['reg_black_nonce'] ) || !wp_verify_nonce( $_POST['reg_black_nonce'], 'reg_black_nonce' ) ) {
+
+        $errors->add( 'honeypot', '<strong>ERROR</strong>: Security check failed. Please try again.' );
+
+        return $errors;
+    }
+
+    if ( !empty( $_POST['hp_user'] ) ) {
+
+        $reg_black_bot_email = sanitize_email( $user_email );
 
         // Add email to the reg black emails table
-
         $wpdb->insert(
             $wpdb->prefix . 'reg_black_emails',
             array('email' => $reg_black_bot_email),
             array('%s')
         );
 
-          $errors->add('honeypot', '<strong>ERROR</strong>: Leave the honeypot field empty.');
+        $errors->add( 'honeypot', '<strong>ERROR</strong>: No bots allowed.' );
 
+        return $errors;
     }
 
     $blocked_domains = $wpdb->get_col( "SELECT domain FROM {$wpdb->prefix}reg_black_domains" );
-
     $blocked_emails = $wpdb->get_col( "SELECT email FROM {$wpdb->prefix}reg_black_emails" );
 
     list( $user, $domain ) = explode( '@', $user_email );
 
     if ( in_array( $domain, $blocked_domains ) || in_array( $user_email, $blocked_emails ) ) {
-
         $errors->add( 'email_blocked', 'Registration with this email or domain is not allowed.' );
 
         // Update statistics for blocked attempts
-
         $wpdb->query( $wpdb->prepare(
-
             "INSERT INTO {$wpdb->prefix}reg_black_attempts (domain, email, blocked_attempts_count, last_login_attempt)
             VALUES (%s, %s, 1, NOW())
             ON DUPLICATE KEY UPDATE blocked_attempts_count = blocked_attempts_count + 1, last_login_attempt = NOW()",
             $domain, $user_email
-
         ));
-
     }
 
     return $errors;
-
 }
 
 add_filter( 'registration_errors', 'reg_black_registration_check', 10, 3 );
