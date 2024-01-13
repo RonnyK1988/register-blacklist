@@ -189,7 +189,7 @@ function reg_black_registration_check( $errors, $sanitized_user_login, $user_ema
 
     // Verify nonce
 
-    if ( empty( $_POST['reg_black_nonce'] ) || !wp_verify_nonce( $_POST['reg_black_nonce'], 'reg_black_nonce' ) ) {
+    if ( empty( $_POST['reg_black_nonce'] ) || !wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['reg_black_nonce'], 'reg_black_nonce' ) ) ) ) {
 
         $errors->add( 'honeypot', '<strong>ERROR</strong>: Security check failed. Please try again.' );
 
